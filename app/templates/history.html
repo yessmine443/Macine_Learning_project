@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Historique - Retail ML{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-history me-3"></i>Historique des Prédictions</h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>ID</th>
+                            <th>Date</th>
+                            <th>Recency</th>
+                            <th>Frequency</th>
+                            <th>Montant</th>
+                            <th>Âge</th>
+                            <th>Résultat</th>
+                            <th>Probabilité</th>
+                            <th>Risque</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pred in predictions.items %}
+                        <tr>
+                            <td>{{ pred.id }}</td>
+                            <td>{{ pred.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{{ pred.recency }}</td>
+                            <td>{{ pred.frequency }}</td>
+                            <td>{{ "%.2f"|format(pred.monetary_total) }} $</td>
+                            <td>{{ pred.age }}</td>
+                            <td>
+                                {% if pred.prediction == 1 %}
+                                    <span class="badge bg-danger">Churn</span>
+                                {% else %}
+                                    <span class="badge bg-success">Fidèle</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="progress" style="height: 20px;">
+                                    <div class="progress-bar bg-{{ 'danger' if pred.probability_churn > 0.7 else 'warning' if pred.probability_churn > 0.3 else 'success' }}" 
+                                         style="width: {{ pred.probability_churn * 100 }}%">
+                                        {{ "%.1f"|format(pred.probability_churn * 100) }}%
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-risk-{{ 'high' if pred.risk_level == 'ÉLEVÉ' else 'medium' if pred.risk_level == 'MOYEN' else 'low' }}">
+                                    {{ pred.risk_level }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if predictions.has_prev %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('main.history', page=predictions.prev_num) }}">Précédent</a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for page_num in predictions.iter_pages(left_edge=2, left_current=2, right_current=3, right_edge=2) %}
+                        {% if page_num %}
+                            {% if page_num == predictions.page %}
+                            <li class="page-item active"><span class="page-link">{{ page_num }}</span></li>
+                            {% else %}
+                            <li class="page-item"><a class="page-link" href="{{ url_for('main.history', page=page_num) }}">{{ page_num }}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if predictions.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('main.history', page=predictions.next_num) }}">Suivant</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+</div>
+{% endblock %}

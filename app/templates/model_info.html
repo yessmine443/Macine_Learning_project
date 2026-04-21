@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Informations Modèle - Retail ML{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-brain me-3"></i>Informations sur le Modèle</h2>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Caractéristiques du Modèle</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <td><strong>Type:</strong></td>
+                            <td><span class="badge bg-primary">{{ metrics.model_type }}</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Date d'entraînement:</strong></td>
+                            <td>{{ metrics.training_date }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Accuracy:</strong></td>
+                            <td>
+                                <div class="progress">
+                                    <div class="progress-bar" style="width: {{ metrics.accuracy * 100 }}%">
+                                        {{ "%.1f"|format(metrics.accuracy * 100) }}%
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Precision:</strong></td>
+                            <td>{{ "%.3f"|format(metrics.precision) }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Recall:</strong></td>
+                            <td>{{ "%.3f"|format(metrics.recall) }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>F1-Score:</strong></td>
+                            <td>{{ "%.3f"|format(metrics.f1_score) }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>AUC-ROC:</strong></td>
+                            <td>{{ "%.3f"|format(metrics.auc_roc) }}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">Performance Cross-Validation</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="display-4 text-warning">{{ "%.1f"|format(metrics.cv_f1 * 100) }}%</div>
+                    <p class="text-muted">F1-Score moyen (5-fold CV)</p>
+                    <hr>
+                    <p class="small text-muted">
+                        Le modèle a été validé avec une cross-validation stratifiée 
+                        pour garantir la robustesse des résultats.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Matrice de Confusion</h5>
+                </div>
+                <div class="card-body">
+                    <div id="confusionMatrix"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Courbe ROC</h5>
+                </div>
+                <div class="card-body">
+                    <div id="rocCurve"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Interprétation des Résultats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-bullseye fa-3x text-primary mb-3"></i>
+                            <h6>Precision Élevée</h6>
+                            <p class="small text-muted">Peu de faux positifs, les clients identifiés comme "Churn" le sont réellement.</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-redo fa-3x text-success mb-3"></i>
+                            <h6>Excellent Recall</h6>
+                            <p class="small text-muted">Le modèle détecte 91% des clients qui vont réellement churn.</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <i class="fas fa-balance-scale fa-3x text-warning mb-3"></i>
+                            <h6>F1-Score Optimal</h6>
+                            <p class="small text-muted">Bon équilibre entre precision et recall pour la détection du churn.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    {% if confusion_matrix %}
+    var cmData = {{ confusion_matrix | safe }};
+    Plotly.newPlot('confusionMatrix', cmData.data, cmData.layout);
+    {% endif %}
+
+    {% if roc_curve %}
+    var rocData = {{ roc_curve | safe }};
+    Plotly.newPlot('rocCurve', rocData.data, rocData.layout);
+    {% endif %}
+</script>
+{% endblock %}

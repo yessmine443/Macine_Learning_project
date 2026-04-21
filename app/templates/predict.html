@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Prédiction Individuelle - Retail ML{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-user me-2"></i>Prédiction de Churn — Client Individuel</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('main.predict') }}">
+                        {{ form.hidden_tag() }}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.recency.label }}</label>
+                                {{ form.recency(class="form-control") }}
+                                {% if form.recency.errors %}<div class="text-danger small">{{ form.recency.errors[0] }}
+                                </div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.frequency.label }}</label>
+                                {{ form.frequency(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.monetary_total.label }}</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">£</span>
+                                    {{ form.monetary_total(class="form-control") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.monetary_std.label }}</label>
+                                {{ form.monetary_std(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.age.label }}</label>
+                                {{ form.age(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.customer_tenure_days.label }}</label>
+                                {{ form.customer_tenure_days(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.support_tickets.label }}</label>
+                                {{ form.support_tickets(class="form-control") }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.avg_days_between_purchases.label }}</label>
+                                {{ form.avg_days_between_purchases(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">{{ form.total_quantity.label }}</label>
+                                {{ form.total_quantity(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">{{ form.return_ratio.label }}</label>
+                                {{ form.return_ratio(class="form-control") }}
+                            </div>
+                            <div class="col-md-3 mb-3">
+                                <label class="form-label">{{ form.unique_products.label }}</label>
+                                {{ form.unique_products(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2 mt-3">
+                            {{ form.submit(class="btn btn-primary btn-lg btn-custom") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if result %}
+            {% if result.prediction == 'Churn' %}
+            {% set box_class = 'result-churn' %}
+            {% set icon_class = 'fa-exclamation-triangle' %}
+            {% else %}
+            {% set box_class = 'result-fidele' %}
+            {% set icon_class = 'fa-check-circle' %}
+            {% endif %}
+
+            <div class="result-box {{ box_class }} shadow-lg mt-4">
+                <div class="text-center mb-4">
+                    <i class="fas {{ icon_class }} fa-4x mb-3"></i>
+                    <h2 class="display-4">{{ result.prediction }}</h2>
+                    <p class="lead">Résultat de l'analyse de risque</p>
+                </div>
+
+                <div class="row text-center mb-4">
+                    <div class="col-md-4">
+                        <h3>{{ result.probability_churn }}%</h3>
+                        <small>Probabilité Churn</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>{{ result.probability_fidele }}%</h3>
+                        <small>Probabilité Fidélité</small>
+                    </div>
+                    <div class="col-md-4">
+                        <h3><span class="badge bg-{{ result.risk_color }}">{{ result.risk_level }}</span></h3>
+                        <small>Niveau de Risque</small>
+                    </div>
+                </div>
+
+                <div class="progress mb-4" style="height:30px;">
+                    <div class="progress-bar bg-danger" role="progressbar"
+                        style="width:{{ result.probability_churn }}%">
+                        Churn {{ result.probability_churn }}%
+                    </div>
+                    <div class="progress-bar bg-success" role="progressbar"
+                        style="width:{{ result.probability_fidele }}%">
+                        Fidèle {{ result.probability_fidele }}%
+                    </div>
+                </div>
+
+                {% if result.top_features %}
+                <div class="mt-4">
+                    <h5><i class="fas fa-lightbulb me-2"></i>Facteurs Clés d'Influence</h5>
+                    {% for feat in result.top_features %}
+                    {% set pct = (feat.importance * 100) | round(1) %}
+                    {% if pct > 100 %}{% set pct = 100 %}{% endif %}
+                    <div class="feature-importance-bar">
+                        <div class="feature-importance-fill" style="width:{{ pct }}%">
+                            {{ feat.feature }} ({{ "%.3f"|format(feat.importance) }})
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,5 @@
+Modèle,CV F1-Score,Test Accuracy,Test Precision,Test Recall,Test F1,Test AUC
+LogisticRegression,1.0,1.0,1.0,1.0,1.0,1.0
+RandomForest,1.0,1.0,1.0,1.0,1.0,0.9999999999999999
+GradientBoosting,1.0,1.0,1.0,1.0,1.0,1.0
+SVM,1.0,1.0,1.0,1.0,1.0,1.0

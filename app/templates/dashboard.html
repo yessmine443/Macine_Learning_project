@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de Bord - Retail ML{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2><i class="fas fa-chart-pie me-3"></i>Tableau de Bord Analytics</h2>
+            <p class="text-muted">Visualisation des données et performance du modèle</p>
+        </div>
+    </div>
+
+    <!-- KPI CARDS -->
+    {% if stats %}
+    <div class="row mb-4">
+        <div class="col-md-2 col-sm-4 mb-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body py-3">
+                    <h4 class="text-primary fw-bold">{{ stats.total_clients }}</h4>
+                    <small class="text-muted">Total Clients</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body py-3">
+                    <h4 class="text-danger fw-bold">{{ stats.churn_rate }}%</h4>
+                    <small class="text-muted">Taux de Churn</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body py-3">
+                    <h4 class="text-success fw-bold">{{ stats.fidele_count }}</h4>
+                    <small class="text-muted">Clients Fidèles</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body py-3">
+                    <h4 class="text-warning fw-bold">{{ stats.avg_recency }}j</h4>
+                    <small class="text-muted">Récence Moyenne</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body py-3">
+                    <h4 class="text-info fw-bold">${{ stats.avg_monetary }}</h4>
+                    <small class="text-muted">Montant Moyen</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-2 col-sm-4 mb-2">
+            <div class="card text-center shadow-sm">
+                <div class="card-body py-3">
+                    <h4 class="text-secondary fw-bold">{{ stats.avg_satisfaction }}/5</h4>
+                    <small class="text-muted">Satisfaction Moy.</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ROW 1 : Pie + Box -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Distribution des Clients</h5>
+                </div>
+                <div class="card-body">
+                    <div id="pieChart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Montant Total par Classe</h5>
+                </div>
+                <div class="card-body">
+                    <div id="boxChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 2 : Scatter + Age -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Recency vs Frequency</h5>
+                </div>
+                <div class="card-body">
+                    <div id="scatterChart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Distribution de l'Âge</h5>
+                </div>
+                <div class="card-body">
+                    <div id="ageChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 3 : Satisfaction + Return -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Score de Satisfaction</h5>
+                </div>
+                <div class="card-body">
+                    <div id="satChart"></div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card h-100 shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Taux de Retour</h5>
+                </div>
+                <div class="card-body">
+                    <div id="returnChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ROW 4 : Feature Importance -->
+    {% if importance_chart %}
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Top 15 Variables Importantes</h5>
+                </div>
+                <div class="card-body">
+                    <div id="importanceChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- ROW 5 : Evolution predictions -->
+    {% if time_chart %}
+    <div class="row">
+        <div class="col-12 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Activité des Prédictions</h5>
+                </div>
+                <div class="card-body">
+                    <div id="timeChart"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    var config = { responsive: true };
+
+    {% if pie_chart %}
+    Plotly.newPlot('pieChart',
+        {{ pie_chart | safe }}.data,
+        {{ pie_chart | safe }}.layout, config);
+    {% endif %}
+
+    {% if box_chart %}
+    Plotly.newPlot('boxChart',
+        {{ box_chart | safe }}.data,
+        {{ box_chart | safe }}.layout, config);
+    {% endif %}
+
+    {% if scatter_chart %}
+    Plotly.newPlot('scatterChart',
+        {{ scatter_chart | safe }}.data,
+        {{ scatter_chart | safe }}.layout, config);
+    {% endif %}
+
+    {% if age_chart %}
+    Plotly.newPlot('ageChart',
+        {{ age_chart | safe }}.data,
+        {{ age_chart | safe }}.layout, config);
+    {% endif %}
+
+    {% if sat_chart %}
+    Plotly.newPlot('satChart',
+        {{ sat_chart | safe }}.data,
+        {{ sat_chart | safe }}.layout, config);
+    {% endif %}
+
+    {% if return_chart %}
+    Plotly.newPlot('returnChart',
+        {{ return_chart | safe }}.data,
+        {{ return_chart | safe }}.layout, config);
+    {% endif %}
+
+    {% if importance_chart %}
+    Plotly.newPlot('importanceChart',
+        {{ importance_chart | safe }}.data,
+        {{ importance_chart | safe }}.layout, config);
+    {% endif %}
+
+    {% if time_chart %}
+    Plotly.newPlot('timeChart',
+        {{ time_chart | safe }}.data,
+        {{ time_chart | safe }}.layout, config);
+    {% endif %}
+</script>
+{% endblock %}

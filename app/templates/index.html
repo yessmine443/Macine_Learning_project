@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+                <div class="container-fluid py-5">
+                    <h1 class="display-5 fw-bold"><i class="fas fa-chart-line me-3 text-primary"></i>Prédiction de Churn Client</h1>
+                    <p class="col-md-8 fs-4">Interface de machine learning pour prédire le risque de désabonnement des clients retail et analyser les facteurs clés de fidélisation.</p>
+                    <a href="{{ url_for('main.predict') }}" class="btn btn-primary btn-lg btn-custom mt-3">
+                        <i class="fas fa-play me-2"></i>Nouvelle Prédiction
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Métriques du modèle -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card metric-card success h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-bullseye fa-3x mb-3"></i>
+                    <h3 class="card-title">{{ "%.1f"|format(metrics.accuracy * 100) }}%</h3>
+                    <p class="card-text">Accuracy</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-crosshairs fa-3x mb-3"></i>
+                    <h3 class="card-title">{{ "%.1f"|format(metrics.precision * 100) }}%</h3>
+                    <p class="card-text">Precision</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card warning h-100">
+                <div class="card-body text-center">
+                    <i class="fas fa-redo fa-3x mb-3"></i>
+                    <h3 class="card-title">{{ "%.1f"|format(metrics.recall * 100) }}%</h3>
+                    <p class="card-text">Recall</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card metric-card h-100" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                <div class="card-body text-center">
+                    <i class="fas fa-chart-area fa-3x mb-3"></i>
+                    <h3 class="card-title">{{ "%.1f"|format(metrics.auc * 100) }}%</h3>
+                    <p class="card-text">AUC-ROC</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions rapides -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <i class="fas fa-user fa-3x text-primary mb-3"></i>
+                <h4>Prédiction Individuelle</h4>
+                <p>Analysez le risque de churn pour un client spécifique en rentrant ses caractéristiques.</p>
+                <a href="{{ url_for('main.predict') }}" class="btn btn-outline-primary">Commencer</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <i class="fas fa-users fa-3x text-success mb-3"></i>
+                <h4>Prédiction par Lot</h4>
+                <p>Importez un fichier CSV pour analyser plusieurs clients simultanément.</p>
+                <a href="{{ url_for('main.batch_predict') }}" class="btn btn-outline-success">Importer CSV</a>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 text-center p-4">
+                <i class="fas fa-chart-pie fa-3x text-warning mb-3"></i>
+                <h4>Tableau de Bord</h4>
+                <p>Visualisez les statistiques, l'importance des features et les tendances.</p>
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-warning">Voir Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Prédictions récentes -->
+    {% if recent_predictions %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h5 class="mb-0"><i class="fas fa-history me-2"></i>Prédictions Récentes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Âge</th>
+                                    <th>Montant Total</th>
+                                    <th>Résultat</th>
+                                    <th>Probabilité Churn</th>
+                                    <th>Risque</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pred in recent_predictions %}
+                                <tr>
+                                    <td>{{ pred.timestamp.strftime('%d/%m/%Y %H:%M') }}</td>
+                                    <td>{{ pred.age }}</td>
+                                    <td>{{ "%.2f"|format(pred.monetary_total) }} $</td>
+                                    <td>
+                                        {% if pred.prediction == 1 %}
+                                            <span class="badge bg-danger">Churn</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Fidèle</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-{{ 'danger' if pred.probability_churn > 0.7 else 'warning' if pred.probability_churn > 0.3 else 'success' }}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ pred.probability_churn * 100 }}%">
+                                                {{ "%.1f"|format(pred.probability_churn * 100) }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-risk-{{ 'high' if pred.risk_level == 'ÉLEVÉ' else 'medium' if pred.risk_level == 'MOYEN' else 'low' }}">
+                                            {{ pred.risk_level }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+
+{% block title %}Prédiction par Lot - Retail ML{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0"><i class="fas fa-file-csv me-2"></i>Prédiction par Lot (Fichier CSV)</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('main.batch_predict') }}" enctype="multipart/form-data">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-4">
+                            <label class="form-label">{{ form.file.label }}</label>
+                            {{ form.file(class="form-control") }}
+                            <div class="form-text">
+                                Le fichier CSV doit contenir les colonnes: Recency, Frequency, MonetaryTotal, Age, etc.
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#exampleModal">Voir exemple</a>
+                            </div>
+                        </div>
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-success btn-lg btn-custom") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if stats %}
+            <div class="row mt-4">
+                <div class="col-md-3">
+                    <div class="card text-center bg-light">
+                        <div class="card-body">
+                            <h3 class="text-primary">{{ stats.total }}</h3>
+                            <small>Total Clients</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-light">
+                        <div class="card-body">
+                            <h3 class="text-success">{{ stats.fidele }}</h3>
+                            <small>Fideles</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-light">
+                        <div class="card-body">
+                            <h3 class="text-danger">{{ stats.churn }}</h3>
+                            <small>Churn</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center bg-light">
+                        <div class="card-body">
+                            <h3 class="text-warning">{{ stats.high_risk }}</h3>
+                            <small>Risque Eleve</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">Visualisation des Resultats</h5>
+                </div>
+                <div class="card-body">
+                    <div id="batchChart"></div>
+                </div>
+            </div>
+
+            <div class="card mt-4 shadow">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Resultats Detailles (Top 20)</h5>
+                    <a href="{{ url_for('main.download_file', filename=download_link) }}"
+                       class="btn btn-sm btn-primary">
+                        <i class="fas fa-download me-2"></i>Telecharger CSV Complet
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Prediction</th>
+                                    <th>Probabilite Churn</th>
+                                    <th>Niveau de Risque</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in results %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        {% if row.Prediction == 'Churn' %}
+                                            <span class="badge bg-danger">Churn</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Fidele</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% set prob = row.Prob_Churn %}
+                                        {% if prob > 70 %}
+                                            {% set bar_color = 'danger' %}
+                                        {% elif prob > 30 %}
+                                            {% set bar_color = 'warning' %}
+                                        {% else %}
+                                            {% set bar_color = 'success' %}
+                                        {% endif %}
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar bg-{{ bar_color }}"
+                                                 style="width: {{ prob }}%">
+                                                {{ prob }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if row.Risk_Level == 'ELEVE' or row.Risk_Level == 'ÉLEVÉ' %}
+                                            <span class="badge bg-danger">{{ row.Risk_Level }}</span>
+                                        {% elif row.Risk_Level == 'MOYEN' %}
+                                            <span class="badge bg-warning">{{ row.Risk_Level }}</span>
+                                        {% else %}
+                                            <span class="badge bg-success">{{ row.Risk_Level }}</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Structure du CSV attendue</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Le fichier CSV doit contenir les colonnes suivantes:</p>
+                <ul>
+                    <li>Recency, Frequency, MonetaryTotal</li>
+                    <li>Age, CustomerTenureDays</li>
+                    <li>SatisfactionScore, SupportTicketsCount</li>
+                    <li>AvgDaysBetweenPurchases, TotalQuantity</li>
+                    <li>SpendingCategory, LoyaltyLevel, AgeCategory</li>
+                </ul>
+                <pre class="bg-light p-2">Recency,Frequency,MonetaryTotal,Age,...
+45,12,1250.50,35,...
+30,8,890.00,28,...</pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if chart %}
+<script>
+    var chartData = {{ chart | safe }};
+    Plotly.newPlot('batchChart', chartData.data, chartData.layout);
+</script>
+{% endif %}
+{% endblock %}
